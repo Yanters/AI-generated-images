@@ -15,7 +15,32 @@ const CreatePost = () => {
     photo: '',
   });
 
-  const handleSubmit = (e) => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.prompt.trim() && formData.photo) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `http://localhost:${import.meta.env.VITE_SERVER_PORT}/api/v1/posts`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        await response.json();
+        navigate('/');
+      } catch (error) {
+        console.log(error);
+        alert('Something went wrong, please try again');
+      }
+    } else {
+      alert('Please enter a prompt and generate an image');
+    }
+  };
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSurpriseMe = () => {
@@ -23,7 +48,36 @@ const CreatePost = () => {
     setFormData({ ...formData, prompt: randomPrompt });
   };
 
-  const generateImage = async () => {};
+  const generateImage = async () => {
+    if (formData.prompt.trim()) {
+      try {
+        setIsGenerating(true);
+        const response = await fetch(
+          `http://localhost:${import.meta.env.VITE_SERVER_PORT}/api/v1/ai`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: formData.prompt }),
+          }
+        );
+
+        const data = await response.json();
+        setFormData({
+          ...formData,
+          photo: `data:image/jpeg;base64,${data.photo}`,
+        });
+      } catch (error) {
+        console.log(error);
+        alert('Something went wrong, please try again');
+      } finally {
+        setIsGenerating(false);
+      }
+    } else {
+      alert('Please enter a prompt');
+    }
+  };
 
   return (
     <section className='max-w-7xl mx-auto'>
